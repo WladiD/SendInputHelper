@@ -40,7 +40,7 @@ var
 		Result:=((Win32MajorVersion * 1000) + Win32MinorVersion) >= 6001;
 	end;
 begin
-	Writeln(Output, 'A command shell and a notepad-instance will be launched [ENTER]');
+	Writeln('A command shell and a notepad-instance will be launched [ENTER]');
 	Readln;
 
 	SIH:=TSendInputHelper.Create;
@@ -96,7 +96,7 @@ begin
 		SIH.Free;
 	end;
 
-	WriteLn(Output, 'All keystrokes was flushed. Press [Enter] to exit.');
+	WriteLn('All keystrokes was flushed. Press [Enter] to exit.');
 	Readln;
 end;
 

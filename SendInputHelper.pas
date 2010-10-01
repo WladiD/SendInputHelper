@@ -202,13 +202,13 @@ end;
  *}
 procedure TSendInputHelper.Flush;
 var
-	InputArray:TInputArray;
 	Input:TInput;
+	Inputs:TInputArray;
 	InputsCount:Integer;
 
 	procedure LocalSendInput;
 	begin
-		SendInput(InputsCount, InputArray, SizeOf(TInput));
+		SendInput(InputsCount, Inputs, SizeOf(TInput));
 	end;
 begin
 	{**
@@ -221,7 +221,7 @@ begin
 	end;
 
 	InputsCount:=0;
-	SetLength(InputArray, Count);
+	SetLength(Inputs, Count);
 	for Input in Self do
 	begin
 		if Input.Itype = INPUT_DELAY then
@@ -231,7 +231,7 @@ begin
 			InputsCount:=0;
 			Continue;
 		end;
-		InputArray[InputsCount]:=Input;
+		Inputs[InputsCount]:=Input;
 		Inc(InputsCount);
 	end;
 	LocalSendInput;

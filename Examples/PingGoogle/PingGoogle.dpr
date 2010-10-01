@@ -77,7 +77,9 @@ begin
 		SendLine('cls');
 		SendLine('ping google.de', 1000);
 		SendLine('ping gmail.com', 1000);
-
+		{**
+		 * Little promotion
+		 *}
 		with SIH do
 		begin
 			AddVirtualKey(VK_RETURN);

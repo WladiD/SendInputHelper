@@ -1,4 +1,4 @@
-program PingGoogle;
+﻿program PingGoogle;
 
 {$APPTYPE CONSOLE}
 
@@ -85,7 +85,10 @@ begin
 			AddVirtualKey(VK_RETURN);
 			AddText('This is a example, how it can be easy', TRUE);
 			AddDelay(100);
-			AddText('to use the Windows.SendInput-API.', TRUE);
+			AddText('to use the Windows.SendInput-API. ', TRUE);
+			AddVirtualKey(VK_RETURN);
+			AddText('Test of Unicode: ');
+			AddText('Привет! Cześć! 你好! !שלום', TRUE);
 			AddDelay(100);
 			AddVirtualKey(VK_RETURN);
 			AddText('Simplified by the SendInputHelper (Unit for Delphi):', TRUE);

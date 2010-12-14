@@ -18,6 +18,12 @@
  * All Rights Reserved.
  *
  *
+ * Acknowledgements
+ *
+ * - Thanks to Marco Warm for his code suggest to support any unicode chars
+ *   <http://www.delphipraxis.net/1063517-post4.html>
+ *
+ *
  * @author Waldemar Derr <mail@wladid.de>
  * @version $Id$
  *}
@@ -48,6 +54,7 @@ type
 		class function GetVirtualKey(VirtualKey:Word; Press, Release:Boolean):TInputArray;
 		class function GetShift(ShiftState:TShiftState; Press, Release:Boolean):TInputArray;
 		class function GetChar(SendChar:Char; Press, Release:Boolean):TInputArray;
+		class function GetUnicodeChar(SendChar:Char; Press, Release:Boolean):TInputArray;
 		class function GetText(SendText:String; AppendReturn:Boolean):TInputArray;
 		class function GetShortCut(ShiftState:TShiftState; ShortChar:Char):TInputArray; overload;
 		class function GetShortCut(ShiftState:TShiftState; ShortVK:Word):TInputArray; overload;
@@ -238,6 +245,32 @@ begin
 	Clear;
 end;
 
+class function TSendInputHelper.GetUnicodeChar(SendChar:Char; Press, Release:Boolean):TInputArray;
+var
+	KeyDown, KeyUp:TInput;
+begin
+	if not (Press or Release) then
+		Exit(nil);
+
+	KeyDown.Itype:=INPUT_KEYBOARD;
+	KeyDown.ki.wVk:=0;
+	KeyDown.ki.wScan:=Word(SendChar);
+	KeyDown.ki.dwFlags:=KEYEVENTF_UNICODE;
+	KeyDown.ki.time:=0;
+	KeyDown.ki.dwExtraInfo:=GetMessageExtraInfo;
+
+	SetLength(Result, Ord(Press) + Ord(Release));
+
+	if Press then
+		Result[0]:=KeyDown;
+	if Release then
+	begin
+		KeyUp:=KeyDown;
+		KeyUp.ki.dwFlags:=KeyUp.ki.dwFlags or KEYEVENTF_KEYUP;
+		Result[Ord(Press)]:=KeyUp;
+	end;
+end;
+
 {**
  * Return a TInputArray with keyboard inputs, that are required to produce the passed char.
  *}
@@ -247,6 +280,14 @@ var
 	ShiftState:TShiftState;
 	PreShifts, Chars, AppShifts:TInputArray;
 begin
+	if not (Press or Release) then
+		Exit(nil);
+	if not ((Ord(SendChar) > 0) and (Ord(SendChar) < 255)) then
+	begin
+		Result:=GetUnicodeChar(SendChar, Press, Release);
+		Exit;
+	end;
+
 	ScanCode:=VkKeyScan(SendChar);
 	PreShifts:=nil;
 	Chars:=nil;

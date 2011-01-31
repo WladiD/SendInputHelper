@@ -88,6 +88,10 @@ const
 	 * @see Flush
 	 *}
 	INPUT_DELAY = INPUT_HARDWARE + 1;
+	{**
+	 * Missing constant in Windows.pas until D2010
+	 *}
+	KEYEVENTF_UNICODE = 4;
 
 function SendInput; external user32 name 'SendInput';
 

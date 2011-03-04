@@ -222,6 +222,8 @@ var
 		SendInput(InputsCount, Inputs, SizeOf(TInput));
 	end;
 begin
+	if Count = 0 then
+		Exit;
 	{**
 	 * Neutralize the real current keyboard state
 	 *}
@@ -380,7 +382,7 @@ begin
 	else
 		Wins:=nil;
 
-	Result:=MergeInputs([Shifts, Ctrls, Alts, Wins]);
+	Result:=MergeInputs([Ctrls, Alts, Wins, Shifts]);
 end;
 
 {**

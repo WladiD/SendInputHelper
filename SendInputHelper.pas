@@ -14,7 +14,7 @@
  * The Original Code is SendInputHelper.pas.
  *
  * The Initial Developer of the Original Code is Waldemar Derr.
- * Portions created by Waldemar Derr are Copyright (C) 2010 Waldemar Derr.
+ * Portions created by Waldemar Derr are Copyright (C) Waldemar Derr.
  * All Rights Reserved.
  *
  *
@@ -24,8 +24,7 @@
  *   <http://www.delphipraxis.net/1063517-post4.html>
  *
  *
- * @author Waldemar Derr <mail@wladid.de>
- * @version $Id$
+ * @author Waldemar Derr <furevest@gmail.com>
  *}
 
 unit SendInputHelper;
@@ -33,65 +32,64 @@ unit SendInputHelper;
 interface
 
 uses
-	SysUtils, Classes, Controls, Generics.Collections, Windows;
+  System.SysUtils, System.Classes, Vcl.Controls, Generics.Collections, Winapi.Windows;
 
 type
-	TInputArray = array of TInput;
-	{**
-	 * Extended ShiftState type, which is compatible with the some named in the Classes unit.
-	 *}
-	TShiftState = set of (
-		ssShift = Ord(Classes.ssShift),
-		ssAlt = Ord(Classes.ssAlt),
-		ssCtrl = Ord(Classes.ssCtrl),
-		ssWin = 32);
+  TInputArray = array of TInput;
 
-	TSendInputHelper = class(TList<TInput>)
-	protected
-		class function MergeInputs(InputsBatch:array of TInputArray):TInputArray;
-	public
-		class function GetKeyboardInput(VirtualKey, ScanCode:Word; Flags, Time:Cardinal):TInput;
-		class function GetVirtualKey(VirtualKey:Word; Press, Release:Boolean):TInputArray;
-		class function GetShift(ShiftState:TShiftState; Press, Release:Boolean):TInputArray;
-		class function GetChar(SendChar:Char; Press, Release:Boolean):TInputArray;
-		class function GetUnicodeChar(SendChar:Char; Press, Release:Boolean):TInputArray;
-		class function GetText(SendText:String; AppendReturn:Boolean):TInputArray;
-		class function GetShortCut(ShiftState:TShiftState; ShortChar:Char):TInputArray; overload;
-		class function GetShortCut(ShiftState:TShiftState; ShortVK:Word):TInputArray; overload;
+  // Extended ShiftState type, which is compatible with the same named in the Classes unit.
+  TShiftState = set of (
+    ssShift = Ord(System.Classes.ssShift),
+    ssAlt = Ord(System.Classes.ssAlt),
+    ssCtrl = Ord(System.Classes.ssCtrl),
+    ssWin = 32);
 
-		class function IsVirtualKeyPressed(VirtualKey:Word):Boolean;
+  TSendInputHelper = class(TList<TInput>)
+  protected
+    class function MergeInputs(InputsBatch: array of TInputArray): TInputArray;
+  public
+    class function GetKeyboardInput(VirtualKey, ScanCode: Word; Flags, Time: Cardinal): TInput;
+    class function GetVirtualKey(VirtualKey: Word; Press, Release: Boolean): TInputArray;
+    class function GetShift(ShiftState: TShiftState; Press, Release: Boolean): TInputArray;
+    class function GetChar(SendChar: Char; Press, Release: Boolean): TInputArray;
+    class function GetUnicodeChar(SendChar: Char; Press, Release: Boolean): TInputArray;
+    class function GetText(SendText: string; AppendReturn: Boolean): TInputArray;
+    class function GetShortCut(ShiftState: TShiftState; ShortChar: Char): TInputArray; overload;
+    class function GetShortCut(ShiftState: TShiftState; ShortVK: Word): TInputArray; overload;
 
-		procedure AddKeyboardInput(VirtualKey, ScanCode:Word; Flags, Time:Cardinal);
-		procedure AddVirtualKey(VirtualKey:Word; Press:Boolean = TRUE; Release:Boolean = TRUE);
-		procedure AddShift(ShiftState:TShiftState; Press, Release:Boolean);
-		procedure AddChar(SendChar:Char; Press:Boolean = TRUE; Release:Boolean = TRUE);
-		procedure AddText(SendText:String; AppendReturn:Boolean = FALSE);
-		procedure AddShortCut(ShiftState:TShiftState; ShortChar:Char); overload;
-		procedure AddShortCut(ShiftState:TShiftState; ShortVK:Word); overload;
+    class function IsVirtualKeyPressed(VirtualKey: Word): Boolean;
 
-		procedure AddDelay(Milliseconds:Cardinal);
+    procedure AddKeyboardInput(VirtualKey, ScanCode: Word; Flags, Time: Cardinal);
+    procedure AddVirtualKey(VirtualKey: Word; Press: Boolean = True; Release: Boolean = True);
+    procedure AddShift(ShiftState: TShiftState; Press, Release: Boolean);
+    procedure AddChar(SendChar: Char; Press: Boolean = True; Release: Boolean = True);
+    procedure AddText(SendText: string; AppendReturn: Boolean = False);
+    procedure AddShortCut(ShiftState: TShiftState; ShortChar: Char); overload;
+    procedure AddShortCut(ShiftState: TShiftState; ShortVK: Word); overload;
 
-		function GetInputArray:TInputArray;
-		procedure Flush;
-	end;
+    procedure AddDelay(Milliseconds: Cardinal);
 
-	// Declaration in Windows.pas (until Delphi 2010) is corrupted, this one is correct:
-	function SendInput(cInputs:Cardinal; pInputs:TInputArray; cbSize:Integer):Cardinal; stdcall;
+    function GetInputArray: TInputArray;
+    procedure Flush;
+  end;
+
+  // Declaration in Windows.pas (until Delphi 2010) is corrupted, this one is correct:
+  function SendInput(cInputs: Cardinal; pInputs: TInputArray; cbSize: Integer): Cardinal; stdcall;
 
 implementation
 
 const
-	{**
-	 * This constant is used as a fake input type for a delay
-	 *
-	 * @see AddDelay
-	 * @see Flush
-	 *}
-	INPUT_DELAY = INPUT_HARDWARE + 1;
-	{**
-	 * Missing constant in Windows.pas until D2010
-	 *}
-	KEYEVENTF_UNICODE = 4;
+  {**
+   * This constant is used as a fake input type for a delay
+   *
+   * @see AddDelay
+   * @see Flush
+   *}
+  INPUT_DELAY = INPUT_HARDWARE + 1;
+  {**
+   * Missing constant in Windows.pas until D2010
+   *}
+  KEYEVENTF_UNICODE = 4;
 
 function SendInput; external user32 name 'SendInput';
 
@@ -102,13 +100,13 @@ function SendInput; external user32 name 'SendInput';
  *
  * @see GetChar
  *}
-procedure TSendInputHelper.AddChar(SendChar:Char; Press, Release:Boolean);
+procedure TSendInputHelper.AddChar(SendChar: Char; Press, Release: Boolean);
 var
-	Inputs:TInputArray;
+  Inputs: TInputArray;
 begin
-	Inputs:=GetChar(SendChar, Press, Release);
-	if Assigned(Inputs) then
-		AddRange(Inputs);
+  Inputs := GetChar(SendChar, Press, Release);
+  if Assigned(Inputs) then
+    AddRange(Inputs);
 end;
 
 {**
@@ -119,13 +117,13 @@ end;
  *
  * @see Flush
  *}
-procedure TSendInputHelper.AddDelay(Milliseconds:Cardinal);
+procedure TSendInputHelper.AddDelay(Milliseconds: Cardinal);
 var
-	DelayInput:TInput;
+  DelayInput: TInput;
 begin
-	DelayInput.Itype:=INPUT_DELAY;
-	DelayInput.ki.time:=Milliseconds;
-	Add(DelayInput);
+  DelayInput.Itype := INPUT_DELAY;
+  DelayInput.ki.time := Milliseconds;
+  Add(DelayInput);
 end;
 
 {**
@@ -133,9 +131,9 @@ end;
  *
  * @see GetKeyboardInput
  *}
-procedure TSendInputHelper.AddKeyboardInput(VirtualKey, ScanCode:Word; Flags, Time:Cardinal);
+procedure TSendInputHelper.AddKeyboardInput(VirtualKey, ScanCode: Word; Flags, Time: Cardinal);
 begin
-	Add(GetKeyboardInput(VirtualKey, ScanCode, Flags, Time));
+  Add(GetKeyboardInput(VirtualKey, ScanCode, Flags, Time));
 end;
 
 {**
@@ -143,13 +141,13 @@ end;
  *
  * @see GetShift
  *}
-procedure TSendInputHelper.AddShift(ShiftState:TShiftState; Press, Release:Boolean);
+procedure TSendInputHelper.AddShift(ShiftState: TShiftState; Press, Release: Boolean);
 var
-	Inputs:TInputArray;
+  Inputs: TInputArray;
 begin
-	Inputs:=GetShift(ShiftState, Press, Release);
-	if Assigned(Inputs) then
-		AddRange(Inputs);
+  Inputs := GetShift(ShiftState, Press, Release);
+  if Assigned(Inputs) then
+    AddRange(Inputs);
 end;
 
 {**
@@ -157,22 +155,22 @@ end;
  *
  * @see GetShortCut
  *}
-procedure TSendInputHelper.AddShortCut(ShiftState:TShiftState; ShortVK:Word);
+procedure TSendInputHelper.AddShortCut(ShiftState: TShiftState; ShortVK: Word);
 var
-	Inputs:TInputArray;
+  Inputs: TInputArray;
 begin
-	Inputs:=GetShortCut(ShiftState, ShortVK);
-	if Assigned(Inputs) then
-		AddRange(Inputs);
+  Inputs := GetShortCut(ShiftState, ShortVK);
+  if Assigned(Inputs) then
+    AddRange(Inputs);
 end;
 
-procedure TSendInputHelper.AddShortCut(ShiftState:TShiftState; ShortChar:Char);
+procedure TSendInputHelper.AddShortCut(ShiftState: TShiftState; ShortChar: Char);
 var
-	Inputs:TInputArray;
+  Inputs: TInputArray;
 begin
-	Inputs:=GetShortCut(ShiftState, ShortChar);
-	if Assigned(Inputs) then
-		AddRange(Inputs);
+  Inputs := GetShortCut(ShiftState, ShortChar);
+  if Assigned(Inputs) then
+    AddRange(Inputs);
 end;
 
 {**
@@ -180,13 +178,13 @@ end;
  *
  * @see GetText
  *}
-procedure TSendInputHelper.AddText(SendText:String; AppendReturn:Boolean);
+procedure TSendInputHelper.AddText(SendText: string; AppendReturn: Boolean);
 var
-	Inputs:TInputArray;
+  Inputs: TInputArray;
 begin
-	Inputs:=GetText(SendText, AppendReturn);
-	if Assigned(Inputs) then
-		AddRange(Inputs);
+  Inputs := GetText(SendText, AppendReturn);
+  if Assigned(Inputs) then
+    AddRange(Inputs);
 end;
 
 {**
@@ -194,13 +192,13 @@ end;
  *
  * @see GetVirtualKey
  *}
-procedure TSendInputHelper.AddVirtualKey(VirtualKey:Word; Press, Release:Boolean);
+procedure TSendInputHelper.AddVirtualKey(VirtualKey: Word; Press, Release: Boolean);
 var
-	Inputs:TInputArray;
+  Inputs: TInputArray;
 begin
-	Inputs:=GetVirtualKey(VirtualKey, Press, Release);
-	if Assigned(Inputs) then
-		AddRange(Inputs);
+  Inputs := GetVirtualKey(VirtualKey, Press, Release);
+  if Assigned(Inputs) then
+    AddRange(Inputs);
 end;
 
 {**
@@ -213,109 +211,110 @@ end;
  *}
 procedure TSendInputHelper.Flush;
 var
-	Input:TInput;
-	Inputs:TInputArray;
-	InputsCount:Integer;
+  Input: TInput;
+  Inputs: TInputArray;
+  InputsCount: Integer;
 
-	procedure LocalSendInput;
-	begin
-		SendInput(InputsCount, Inputs, SizeOf(TInput));
-	end;
+  procedure LocalSendInput;
+  begin
+    SendInput(InputsCount, Inputs, SizeOf(TInput));
+  end;
+
 begin
-	if Count = 0 then
-		Exit;
-	{**
-	 * Neutralize the real current keyboard state
-	 *}
-	if GetKeyState(VK_CAPITAL) = 1 then
-	begin
-		InsertRange(0, GetVirtualKey(VK_CAPITAL, TRUE, TRUE));
-		AddVirtualKey(VK_CAPITAL, TRUE, TRUE);
-	end;
+  if Count = 0 then
+    Exit;
+  {**
+   * Neutralize the real current keyboard state
+   *}
+  if GetKeyState(VK_CAPITAL) = 1 then
+  begin
+    InsertRange(0, GetVirtualKey(VK_CAPITAL, True, True));
+    AddVirtualKey(VK_CAPITAL, True, True);
+  end;
 
-	InputsCount:=0;
-	SetLength(Inputs, Count);
-	for Input in Self do
-	begin
-		if Input.Itype = INPUT_DELAY then
-		begin
-			LocalSendInput;
-			Sleep(Input.ki.time);
-			InputsCount:=0;
-			Continue;
-		end;
-		Inputs[InputsCount]:=Input;
-		Inc(InputsCount);
-	end;
-	LocalSendInput;
-	Clear;
+  InputsCount := 0;
+  SetLength(Inputs, Count);
+  for Input in Self do
+  begin
+    if Input.Itype = INPUT_DELAY then
+    begin
+      LocalSendInput;
+      Sleep(Input.ki.time);
+      InputsCount := 0;
+      Continue;
+    end;
+    Inputs[InputsCount] := Input;
+    Inc(InputsCount);
+  end;
+  LocalSendInput;
+  Clear;
 end;
 
-class function TSendInputHelper.GetUnicodeChar(SendChar:Char; Press, Release:Boolean):TInputArray;
+class function TSendInputHelper.GetUnicodeChar(SendChar: Char; Press, Release: Boolean): TInputArray;
 var
-	KeyDown, KeyUp:TInput;
+  KeyDown, KeyUp: TInput;
 begin
-	if not (Press or Release) then
-		Exit(nil);
+  if not (Press or Release) then
+    Exit(nil);
 
-	KeyDown.Itype:=INPUT_KEYBOARD;
-	KeyDown.ki.wVk:=0;
-	KeyDown.ki.wScan:=Word(SendChar);
-	KeyDown.ki.dwFlags:=KEYEVENTF_UNICODE;
-	KeyDown.ki.time:=0;
-	KeyDown.ki.dwExtraInfo:=GetMessageExtraInfo;
+  KeyDown.Itype := INPUT_KEYBOARD;
+  KeyDown.ki.wVk := 0;
+  KeyDown.ki.wScan := Word(SendChar);
+  KeyDown.ki.dwFlags := KEYEVENTF_UNICODE;
+  KeyDown.ki.time := 0;
+  KeyDown.ki.dwExtraInfo := GetMessageExtraInfo;
 
-	SetLength(Result, Ord(Press) + Ord(Release));
+  SetLength(Result, Ord(Press) + Ord(Release));
 
-	if Press then
-		Result[0]:=KeyDown;
-	if Release then
-	begin
-		KeyUp:=KeyDown;
-		KeyUp.ki.dwFlags:=KeyUp.ki.dwFlags or KEYEVENTF_KEYUP;
-		Result[Ord(Press)]:=KeyUp;
-	end;
+  if Press then
+    Result[0] := KeyDown;
+  if Release then
+  begin
+    KeyUp := KeyDown;
+    KeyUp.ki.dwFlags := KeyUp.ki.dwFlags or KEYEVENTF_KEYUP;
+    Result[Ord(Press)] := KeyUp;
+  end;
 end;
 
 {**
  * Return a TInputArray with keyboard inputs, that are required to produce the passed char.
  *}
-class function TSendInputHelper.GetChar(SendChar:Char; Press, Release:Boolean):TInputArray;
+class function TSendInputHelper.GetChar(SendChar: Char; Press, Release: Boolean): TInputArray;
 var
-	ScanCode:Word;
-	ShiftState:TShiftState;
-	PreShifts, Chars, AppShifts:TInputArray;
+  ScanCode: Word;
+  ShiftState: TShiftState;
+  PreShifts, Chars, AppShifts: TInputArray;
 begin
-	if not (Press or Release) then
-		Exit(nil);
-	if not ((Ord(SendChar) > 0) and (Ord(SendChar) < 255)) then
-	begin
-		Result:=GetUnicodeChar(SendChar, Press, Release);
-		Exit;
-	end;
+  if not (Press or Release) then
+    Exit(nil);
+  if not ((Ord(SendChar) > 0) and (Ord(SendChar) < 255)) then
+  begin
+    Result := GetUnicodeChar(SendChar, Press, Release);
+    Exit;
+  end;
 
-	ScanCode:=VkKeyScan(SendChar);
-	PreShifts:=nil;
-	Chars:=nil;
-	AppShifts:=nil;
-	ShiftState:=[];
-	// Shift
-	if (ScanCode and $100) <> 0 then
-		Include(ShiftState, ssShift);
-	// Control
-	if (ScanCode and $200) <> 0 then
-		Include(ShiftState, ssCtrl);
-	// Alt
-	if (ScanCode and $400) <> 0 then
-		Include(ShiftState, ssAlt);
+  ScanCode := VkKeyScan(SendChar);
+  PreShifts := nil;
+  Chars := nil;
+  AppShifts := nil;
+  ShiftState := [];
+  // Shift
+  if (ScanCode and $100) <> 0 then
+    Include(ShiftState, ssShift);
+  // Control
+  if (ScanCode and $200) <> 0 then
+    Include(ShiftState, ssCtrl);
+  // Alt
+  if (ScanCode and $400) <> 0 then
+    Include(ShiftState, ssAlt);
 
-	Chars:=GetVirtualKey(ScanCode, Press, Release);
-	if Press then
-	begin
-		PreShifts:=GetShift(ShiftState, TRUE, FALSE);
-		AppShifts:=GetShift(ShiftState, FALSE, TRUE);
-	end;
-	Result:=MergeInputs([PreShifts, Chars, AppShifts]);
+  Chars := GetVirtualKey(ScanCode, Press, Release);
+  if Press then
+  begin
+    PreShifts := GetShift(ShiftState, True, False);
+    AppShifts := GetShift(ShiftState, False, True);
+  end;
+  Result := MergeInputs([PreShifts, Chars, AppShifts]);
 end;
 
 {**
@@ -327,85 +326,85 @@ end;
  * not suitable for direct flush to SendInput. At best, don't use AddDelay if you use the returned
  * array by this method.
  *}
-function TSendInputHelper.GetInputArray:TInputArray;
+function TSendInputHelper.GetInputArray: TInputArray;
 var
-	Input:TInput;
-	cc:Integer;
+  Input: TInput;
+  cc: Integer;
 begin
-	SetLength(Result, Count);
-	cc:=0;
-	for Input in Self do
-	begin
-		Result[cc]:=Input;
-		Inc(cc);
-	end;
+  SetLength(Result, Count);
+  cc := 0;
+  for Input in Self do
+  begin
+    Result[cc] := Input;
+    Inc(cc);
+  end;
 end;
 
 {**
  * Return a single keyboard input entry
  *}
-class function TSendInputHelper.GetKeyboardInput(VirtualKey, ScanCode:Word; Flags,
-	Time:Cardinal):TInput;
+class function TSendInputHelper.GetKeyboardInput(VirtualKey, ScanCode: Word; Flags,
+  Time: Cardinal): TInput;
 begin
-	Result.Itype:=INPUT_KEYBOARD;
-	Result.ki.wVk:=VirtualKey;
-	Result.ki.wScan:=ScanCode;
-	Result.ki.dwFlags:=Flags;
-	Result.ki.time:=Time;
+  Result.Itype := INPUT_KEYBOARD;
+  Result.ki.wVk := VirtualKey;
+  Result.ki.wScan := ScanCode;
+  Result.ki.dwFlags := Flags;
+  Result.ki.time := Time;
 end;
 
 {**
  * Return combined TInputArray with "shift" keys input, this are Ctrl, Alt, Win or the Shift key
  *}
-class function TSendInputHelper.GetShift(ShiftState:TShiftState;
-	Press, Release:Boolean):TInputArray;
+class function TSendInputHelper.GetShift(ShiftState: TShiftState;
+  Press, Release: Boolean): TInputArray;
 var
-	Shifts, Ctrls, Alts, Wins:TInputArray;
+  Shifts, Ctrls, Alts, Wins: TInputArray;
 begin
-	if ssShift in ShiftState then
-		Shifts:=GetVirtualKey(VK_SHIFT, Press, Release)
-	else
-		Shifts:=nil;
+  if ssShift in ShiftState then
+    Shifts := GetVirtualKey(VK_SHIFT, Press, Release)
+  else
+    Shifts := nil;
 
-	if ssCtrl in ShiftState then
-		Ctrls:=GetVirtualKey(VK_CONTROL, Press, Release)
-	else
-		Ctrls:=nil;
+  if ssCtrl in ShiftState then
+    Ctrls := GetVirtualKey(VK_CONTROL, Press, Release)
+  else
+    Ctrls := nil;
 
-	if ssAlt in ShiftState then
-		Alts:=GetVirtualKey(VK_MENU, Press, Release)
-	else
-		Alts:=nil;
+  if ssAlt in ShiftState then
+    Alts := GetVirtualKey(VK_MENU, Press, Release)
+  else
+    Alts := nil;
 
-	if ssWin in ShiftState then
-		Wins:=GetVirtualKey(VK_LWIN, Press, Release)
-	else
-		Wins:=nil;
+  if ssWin in ShiftState then
+    Wins := GetVirtualKey(VK_LWIN, Press, Release)
+  else
+    Wins := nil;
 
-	Result:=MergeInputs([Ctrls, Alts, Wins, Shifts]);
+  Result := MergeInputs([Ctrls, Alts, Wins, Shifts]);
 end;
 
 {**
  * Return required keyboard inputs in a TInputArray, to produce a regular keyboard short cut
  *}
-class function TSendInputHelper.GetShortCut(ShiftState:TShiftState; ShortChar:Char):TInputArray;
+class function TSendInputHelper.GetShortCut(ShiftState: TShiftState; ShortChar: Char): TInputArray;
 var
-	PreShifts, Chars, AppShifts:TInputArray;
+  PreShifts, Chars, AppShifts: TInputArray;
 begin
-	PreShifts:=GetShift(ShiftState, TRUE, FALSE);
-	Chars:=GetChar(ShortChar, TRUE, TRUE);
-	AppShifts:=GetShift(ShiftState, FALSE, TRUE);
-	Result:=MergeInputs([PreShifts, Chars, AppShifts]);
+  PreShifts := GetShift(ShiftState, True, False);
+  Chars := GetChar(ShortChar, True, True);
+  AppShifts := GetShift(ShiftState, False, True);
+  Result := MergeInputs([PreShifts, Chars, AppShifts]);
 end;
 
-class function TSendInputHelper.GetShortCut(ShiftState:TShiftState; ShortVK:Word):TInputArray;
+class function TSendInputHelper.GetShortCut(ShiftState: TShiftState; ShortVK: Word): TInputArray;
 var
-	PreShifts, VKs, AppShifts:TInputArray;
+  PreShifts, VKs, AppShifts: TInputArray;
 begin
-	PreShifts:=GetShift(ShiftState, TRUE, FALSE);
-	VKs:=GetVirtualKey(ShortVK, TRUE, TRUE);
-	AppShifts:=GetShift(ShiftState, FALSE, TRUE);
-	Result:=MergeInputs([PreShifts, VKs, AppShifts]);
+  PreShifts := GetShift(ShiftState, True, False);
+  VKs := GetVirtualKey(ShortVK, True, True);
+  AppShifts := GetShift(ShiftState, False, True);
+  Result := MergeInputs([PreShifts, VKs, AppShifts]);
 end;
 
 {**
@@ -413,15 +412,15 @@ end;
  *
  * @see GetText
  *}
-class function TSendInputHelper.GetText(SendText:String; AppendReturn:Boolean):TInputArray;
+class function TSendInputHelper.GetText(SendText: string; AppendReturn: Boolean): TInputArray;
 var
-	cc:Integer;
+  cc: Integer;
 begin
-	Result:=nil;
-	for cc:=1 to Length(SendText) do
-		Result:=MergeInputs([Result, GetChar(SendText[cc], TRUE, TRUE)]);
-	if Assigned(Result) and AppendReturn then
-		Result:=MergeInputs([Result, GetVirtualKey(VK_RETURN, TRUE, TRUE)]);
+  Result := nil;
+  for cc := 1 to Length(SendText) do
+    Result := MergeInputs([Result, GetChar(SendText[cc], True, True)]);
+  if Assigned(Result) and AppendReturn then
+    Result := MergeInputs([Result, GetVirtualKey(VK_RETURN, True, True)]);
 end;
 
 {**
@@ -429,23 +428,24 @@ end;
  *
  * @see GetVirtualKey
  *}
-class function TSendInputHelper.GetVirtualKey(VirtualKey:Word; Press, Release:Boolean):TInputArray;
+class function TSendInputHelper.GetVirtualKey(VirtualKey: Word;
+  Press, Release: Boolean): TInputArray;
 begin
-	if not (Press or Release) then
-		Exit(nil);
-	SetLength(Result, Ord(Press) + Ord(Release));
-	if Press then
-		Result[0]:=GetKeyboardInput(VirtualKey, 0, 0, 0);
-	if Release then
-		Result[Ord(Press)]:=GetKeyboardInput(VirtualKey, 0, KEYEVENTF_KEYUP, 0);
+  if not (Press or Release) then
+    Exit(nil);
+  SetLength(Result, Ord(Press) + Ord(Release));
+  if Press then
+    Result[0] := GetKeyboardInput(VirtualKey, 0, 0, 0);
+  if Release then
+    Result[Ord(Press)] := GetKeyboardInput(VirtualKey, 0, KEYEVENTF_KEYUP, 0);
 end;
 
 {**
  * Determine, whether at the time of call, the passed key is pressed or not
  *}
-class function TSendInputHelper.IsVirtualKeyPressed(VirtualKey:Word):Boolean;
+class function TSendInputHelper.IsVirtualKeyPressed(VirtualKey: Word): Boolean;
 begin
-	Result:=(GetAsyncKeyState(VirtualKey) and $8000 shr 15) = 1;
+  Result := (GetAsyncKeyState(VirtualKey) and $8000 shr 15) = 1;
 end;
 
 {**
@@ -453,32 +453,32 @@ end;
  *
  * If all passed TInputArray's are nil or empty, then nil is returned.
  *}
-class function TSendInputHelper.MergeInputs(InputsBatch:array of TInputArray):TInputArray;
+class function TSendInputHelper.MergeInputs(InputsBatch: array of TInputArray): TInputArray;
 var
-	Inputs:TInputArray;
-	InputsLength, Index:Integer;
-	cc, ccc:Integer;
+  Inputs: TInputArray;
+  InputsLength, Index: Integer;
+  cc, ccc: Integer;
 begin
-	Result:=nil;
-	InputsLength:=0;
-	for cc:=0 to Length(InputsBatch) - 1 do
-		if Assigned(InputsBatch[cc]) then
-			InputsLength:=InputsLength + Length(InputsBatch[cc]);
-	if InputsLength = 0 then
-		Exit;
-	SetLength(Result, InputsLength);
-	Index:=0;
-	for cc:=0 to Length(InputsBatch) - 1 do
-	begin
-		if not Assigned(InputsBatch[cc]) then
-			Continue;
-		Inputs:=InputsBatch[cc];
-		for ccc:=0 to Length(Inputs)- 1 do
-		begin
-			Result[Index]:=Inputs[ccc];
-			Inc(Index);
-		end;
-	end;
+  Result := nil;
+  InputsLength := 0;
+  for cc := 0 to Length(InputsBatch) - 1 do
+    if Assigned(InputsBatch[cc]) then
+      InputsLength := InputsLength + Length(InputsBatch[cc]);
+  if InputsLength = 0 then
+    Exit;
+  SetLength(Result, InputsLength);
+  Index := 0;
+  for cc := 0 to Length(InputsBatch) - 1 do
+  begin
+    if not Assigned(InputsBatch[cc]) then
+      Continue;
+    Inputs := InputsBatch[cc];
+    for ccc := 0 to Length(Inputs)- 1 do
+    begin
+      Result[Index] := Inputs[ccc];
+      Inc(Index);
+    end;
+  end;
 end;
 
 end.

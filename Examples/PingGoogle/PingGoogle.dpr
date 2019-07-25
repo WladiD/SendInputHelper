@@ -79,7 +79,7 @@ begin
     SIH.AddText('to use the Windows.SendInput-API. ', True);
     SIH.AddVirtualKey(VK_RETURN);
     SIH.AddText('Test of Unicode: ');
-    SIH.AddText('Привет! Cześć! 你好! !שלום', True);
+    SIH.AddText('Привет! Cześć! 你好! !שלום éèáà', True);
     SIH.AddDelay(100);
     SIH.AddVirtualKey(VK_RETURN);
     SIH.AddText('Simplified by the SendInputHelper (Unit for Delphi):', True);

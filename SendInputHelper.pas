@@ -22,7 +22,8 @@
  *
  * - Thanks to Marco Warm for his code suggest to support any unicode chars
  *   <http://www.delphipraxis.net/1063517-post4.html>
- *
+ * - Thanks to PeterPanino for his bug fix
+ *   <https://www.delphipraxis.net/1188701-post17.html>
  *
  * @author Waldemar Derr <furevest@gmail.com>
  *}
@@ -37,8 +38,8 @@ uses
 type
   TInputArray = array of TInput;
 
-  // Extended ShiftState type, which is compatible with the same named in the Classes unit.
-  TShiftState = set of (
+  // Local ShiftState type, which is compatible with the same named in the Classes unit.
+  TSIHShiftState = set of (
     ssShift = Ord(System.Classes.ssShift),
     ssAlt = Ord(System.Classes.ssAlt),
     ssCtrl = Ord(System.Classes.ssCtrl),
@@ -50,22 +51,22 @@ type
   public
     class function GetKeyboardInput(VirtualKey, ScanCode: Word; Flags, Time: Cardinal): TInput;
     class function GetVirtualKey(VirtualKey: Word; Press, Release: Boolean): TInputArray;
-    class function GetShift(ShiftState: TShiftState; Press, Release: Boolean): TInputArray;
+    class function GetShift(ShiftState: TSIHShiftState; Press, Release: Boolean): TInputArray;
     class function GetChar(SendChar: Char; Press, Release: Boolean): TInputArray;
     class function GetUnicodeChar(SendChar: Char; Press, Release: Boolean): TInputArray;
     class function GetText(SendText: string; AppendReturn: Boolean): TInputArray;
-    class function GetShortCut(ShiftState: TShiftState; ShortChar: Char): TInputArray; overload;
-    class function GetShortCut(ShiftState: TShiftState; ShortVK: Word): TInputArray; overload;
+    class function GetShortCut(ShiftState: TSIHShiftState; ShortChar: Char): TInputArray; overload;
+    class function GetShortCut(ShiftState: TSIHShiftState; ShortVK: Word): TInputArray; overload;
 
     class function IsVirtualKeyPressed(VirtualKey: Word): Boolean;
 
     procedure AddKeyboardInput(VirtualKey, ScanCode: Word; Flags, Time: Cardinal);
     procedure AddVirtualKey(VirtualKey: Word; Press: Boolean = True; Release: Boolean = True);
-    procedure AddShift(ShiftState: TShiftState; Press, Release: Boolean);
+    procedure AddShift(ShiftState: TSIHShiftState; Press, Release: Boolean);
     procedure AddChar(SendChar: Char; Press: Boolean = True; Release: Boolean = True);
     procedure AddText(SendText: string; AppendReturn: Boolean = False);
-    procedure AddShortCut(ShiftState: TShiftState; ShortChar: Char); overload;
-    procedure AddShortCut(ShiftState: TShiftState; ShortVK: Word); overload;
+    procedure AddShortCut(ShiftState: TSIHShiftState; ShortChar: Char); overload;
+    procedure AddShortCut(ShiftState: TSIHShiftState; ShortVK: Word); overload;
 
     procedure AddDelay(Milliseconds: Cardinal);
 
@@ -141,7 +142,7 @@ end;
  *
  * @see GetShift
  *}
-procedure TSendInputHelper.AddShift(ShiftState: TShiftState; Press, Release: Boolean);
+procedure TSendInputHelper.AddShift(ShiftState: TSIHShiftState; Press, Release: Boolean);
 var
   Inputs: TInputArray;
 begin
@@ -155,7 +156,7 @@ end;
  *
  * @see GetShortCut
  *}
-procedure TSendInputHelper.AddShortCut(ShiftState: TShiftState; ShortVK: Word);
+procedure TSendInputHelper.AddShortCut(ShiftState: TSIHShiftState; ShortVK: Word);
 var
   Inputs: TInputArray;
 begin
@@ -164,7 +165,7 @@ begin
     AddRange(Inputs);
 end;
 
-procedure TSendInputHelper.AddShortCut(ShiftState: TShiftState; ShortChar: Char);
+procedure TSendInputHelper.AddShortCut(ShiftState: TSIHShiftState; ShortChar: Char);
 var
   Inputs: TInputArray;
 begin
@@ -282,12 +283,12 @@ end;
 class function TSendInputHelper.GetChar(SendChar: Char; Press, Release: Boolean): TInputArray;
 var
   ScanCode: Word;
-  ShiftState: TShiftState;
+  ShiftState: TSIHShiftState;
   PreShifts, Chars, AppShifts: TInputArray;
 begin
   if not (Press or Release) then
     Exit(nil);
-  if not ((Ord(SendChar) > 0) and (Ord(SendChar) < 255)) then
+  if not ((Ord(SendChar) > 0) and (Ord(SendChar) < 127)) then
   begin
     Result := GetUnicodeChar(SendChar, Press, Release);
     Exit;
@@ -356,7 +357,7 @@ end;
 {**
  * Return combined TInputArray with "shift" keys input, this are Ctrl, Alt, Win or the Shift key
  *}
-class function TSendInputHelper.GetShift(ShiftState: TShiftState;
+class function TSendInputHelper.GetShift(ShiftState: TSIHShiftState;
   Press, Release: Boolean): TInputArray;
 var
   Shifts, Ctrls, Alts, Wins: TInputArray;
@@ -387,7 +388,7 @@ end;
 {**
  * Return required keyboard inputs in a TInputArray, to produce a regular keyboard short cut
  *}
-class function TSendInputHelper.GetShortCut(ShiftState: TShiftState; ShortChar: Char): TInputArray;
+class function TSendInputHelper.GetShortCut(ShiftState: TSIHShiftState; ShortChar: Char): TInputArray;
 var
   PreShifts, Chars, AppShifts: TInputArray;
 begin
@@ -397,7 +398,7 @@ begin
   Result := MergeInputs([PreShifts, Chars, AppShifts]);
 end;
 
-class function TSendInputHelper.GetShortCut(ShiftState: TShiftState; ShortVK: Word): TInputArray;
+class function TSendInputHelper.GetShortCut(ShiftState: TSIHShiftState; ShortVK: Word): TInputArray;
 var
   PreShifts, VKs, AppShifts: TInputArray;
 begin

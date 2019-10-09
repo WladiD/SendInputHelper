@@ -33,7 +33,13 @@ unit SendInputHelper;
 interface
 
 uses
-  System.SysUtils, System.Classes, Vcl.Controls, Generics.Collections, Winapi.Windows;
+  System.SysUtils,
+  System.Classes,
+  System.UITypes,
+  Vcl.Controls,
+  Vcl.Forms,
+  Generics.Collections,
+  Winapi.Windows;
 
 type
   TInputArray = array of TInput;
@@ -58,6 +64,11 @@ type
     class function GetShortCut(ShiftState: TSIHShiftState; ShortChar: Char): TInputArray; overload;
     class function GetShortCut(ShiftState: TSIHShiftState; ShortVK: Word): TInputArray; overload;
 
+    class function GetMouseInput(X, Y: Integer; MouseData, Flags, Time: DWORD): TInput;
+    class function GetMouseClick(MouseButton: TMouseButton; Press, Release: Boolean): TInputArray;
+    class function GetRelativeMouseMove(DeltaX, DeltaY: Integer): TInputArray;
+    class function GetAbsoluteMouseMove(X, Y: Integer; DesktopCoordinates: Boolean): TInputArray;
+
     class function IsVirtualKeyPressed(VirtualKey: Word): Boolean;
 
     procedure AddKeyboardInput(VirtualKey, ScanCode: Word; Flags, Time: Cardinal);
@@ -67,6 +78,10 @@ type
     procedure AddText(SendText: string; AppendReturn: Boolean = False);
     procedure AddShortCut(ShiftState: TSIHShiftState; ShortChar: Char); overload;
     procedure AddShortCut(ShiftState: TSIHShiftState; ShortVK: Word); overload;
+
+    procedure AddMouseClick(MouseButton: TMouseButton; Press: Boolean = True; Release: Boolean = True);
+    procedure AddRelativeMouseMove(DeltaX, DeltaY: Integer);
+    procedure AddAbsoluteMouseMove(X, Y: Integer; DesktopCoordinates: Boolean = True);
 
     procedure AddDelay(Milliseconds: Cardinal);
 
@@ -106,6 +121,33 @@ var
   Inputs: TInputArray;
 begin
   Inputs := GetChar(SendChar, Press, Release);
+  if Assigned(Inputs) then
+    AddRange(Inputs);
+end;
+
+procedure TSendInputHelper.AddMouseClick(MouseButton: TMouseButton; Press, Release: Boolean);
+var
+  Inputs: TInputArray;
+begin
+  Inputs := GetMouseClick(MouseButton, Press, Release);
+  if Assigned(Inputs) then
+    AddRange(Inputs);
+end;
+
+procedure TSendInputHelper.AddRelativeMouseMove(DeltaX, DeltaY: Integer);
+var
+  Inputs: TInputArray;
+begin
+  Inputs := GetRelativeMouseMove(DeltaX, DeltaY);
+  if Assigned(Inputs) then
+    AddRange(Inputs);
+end;
+
+procedure TSendInputHelper.AddAbsoluteMouseMove(X, Y: Integer; DesktopCoordinates: Boolean);
+var
+  Inputs: TInputArray;
+begin
+  Inputs := GetAbsoluteMouseMove(X, Y, DesktopCoordinates);
   if Assigned(Inputs) then
     AddRange(Inputs);
 end;
@@ -406,6 +448,93 @@ begin
   VKs := GetVirtualKey(ShortVK, True, True);
   AppShifts := GetShift(ShiftState, False, True);
   Result := MergeInputs([PreShifts, VKs, AppShifts]);
+end;
+
+class function TSendInputHelper.GetMouseInput(X, Y: Integer; MouseData, Flags, Time: DWORD): TInput;
+begin
+  Result.Itype := INPUT_MOUSE;
+  Result.mi.dx := X;
+  Result.mi.dy := Y;
+  Result.mi.mouseData := MouseData;
+  Result.mi.dwFlags := Flags;
+  Result.mi.time := Time;
+end;
+
+class function TSendInputHelper.GetMouseClick(MouseButton: TMouseButton;
+  Press, Release: Boolean): TInputArray;
+
+  function PressFlags: Cardinal;
+  begin
+    case MouseButton of
+      TMouseButton.mbLeft:
+        Result := MOUSEEVENTF_LEFTDOWN;
+      TMouseButton.mbRight:
+        Result := MOUSEEVENTF_RIGHTDOWN;
+      TMouseButton.mbMiddle:
+        Result := MOUSEEVENTF_MIDDLEDOWN;
+    else
+      Result := 0;
+    end;
+  end;
+
+  function ReleaseFlags: Cardinal;
+  begin
+    case MouseButton of
+      TMouseButton.mbLeft:
+        Result := MOUSEEVENTF_LEFTUP;
+      TMouseButton.mbRight:
+        Result := MOUSEEVENTF_RIGHTUP;
+      TMouseButton.mbMiddle:
+        Result := MOUSEEVENTF_MIDDLEUP;
+    else
+      Result := 0;
+    end;
+  end;
+
+begin
+  if not (Press or Release) then
+    Exit(nil);
+  SetLength(Result, Ord(Press) + Ord(Release));
+  if Press then
+    Result[0] := GetMouseInput(0, 0, 0, PressFlags, 0);
+  if Release then
+    Result[Ord(Press)] := GetMouseInput(0, 0, 0, ReleaseFlags, 0);
+end;
+
+class function TSendInputHelper.GetRelativeMouseMove(DeltaX, DeltaY: Integer): TInputArray;
+begin
+  SetLength(Result, 1);
+  Result[0] := GetMouseInput(DeltaX, DeltaY, 0, MOUSEEVENTF_MOVE, 0);
+end;
+
+class function TSendInputHelper.GetAbsoluteMouseMove(X, Y: Integer;
+  DesktopCoordinates: Boolean): TInputArray;
+const
+  MOUSEEVENTF_VIRTUALDESK = $4000;
+  COORDINATE_MAX = $FFFF;
+
+  function NormalizeDimension(Value, RefValue: Integer): Integer;
+  begin
+    Result := Round(Value * (COORDINATE_MAX / RefValue));
+  end;
+
+var
+  Flags: Cardinal;
+  RefSize: TSize;
+begin
+  SetLength(Result, 1);
+  Flags := MOUSEEVENTF_MOVE or MOUSEEVENTF_ABSOLUTE;
+
+  if DesktopCoordinates then
+  begin
+    RefSize := Screen.DesktopRect.Size;
+    Flags := Flags or MOUSEEVENTF_VIRTUALDESK
+  end
+  else
+    RefSize := Screen.PrimaryMonitor.BoundsRect.Size;
+
+  Result[0] := GetMouseInput(
+    NormalizeDimension(X, RefSize.cx), NormalizeDimension(Y, RefSize.cy), 0, Flags, 0);
 end;
 
 {**

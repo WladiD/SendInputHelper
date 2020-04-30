@@ -521,13 +521,23 @@ const
 var
   Flags: Cardinal;
   RefSize: TSize;
+  DesktopRect: TRect;
 begin
   SetLength(Result, 1);
   Flags := MOUSEEVENTF_MOVE or MOUSEEVENTF_ABSOLUTE;
 
   if DesktopCoordinates then
   begin
-    RefSize := Screen.DesktopRect.Size;
+    DesktopRect := Screen.DesktopRect;
+    RefSize := DesktopRect.Size;
+
+    // Offset the origin to get the virtual screen coordinates
+    // This is only in multi monitor setups required.
+    if DesktopRect.Left <> 0 then
+      X := X - DesktopRect.Left;
+    if DesktopRect.Top <> 0 then
+      Y := Y - DesktopRect.Top;
+
     Flags := Flags or MOUSEEVENTF_VIRTUALDESK
   end
   else

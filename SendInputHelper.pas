@@ -1,32 +1,30 @@
-{**
- * License
- *
- * The contents of this file are subject to the Mozilla Public License
- * Version 1.1 (the "License"); you may not use this file except in
- * compliance with the License. You may obtain a copy of the License at
- * http://www.mozilla.org/MPL/
- *
- * Software distributed under the License is distributed on an "AS IS"
- * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
- * License for the specific language governing rights and limitations
- * under the License.
- *
- * The Original Code is SendInputHelper.pas.
- *
- * The Initial Developer of the Original Code is Waldemar Derr.
- * Portions created by Waldemar Derr are Copyright (C) Waldemar Derr.
- * All Rights Reserved.
- *
- *
- * Acknowledgements
- *
- * - Thanks to Marco Warm for his code suggest to support any unicode chars
- *   <http://www.delphipraxis.net/1063517-post4.html>
- * - Thanks to PeterPanino for his bug fix
- *   <https://www.delphipraxis.net/1188701-post17.html>
- *
- * @author Waldemar Derr <furevest@gmail.com>
- *}
+// License
+//
+// The contents of this file are subject to the Mozilla Public License
+// Version 1.1 (the "License"); you may not use this file except in
+// compliance with the License. You may obtain a copy of the License at
+// http://www.mozilla.org/MPL/
+//
+// Software distributed under the License is distributed on an "AS IS"
+// basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
+// License for the specific language governing rights and limitations
+// under the License.
+//
+// The Original Code is SendInputHelper.pas.
+//
+// The Initial Developer of the Original Code is Waldemar Derr.
+// Portions created by Waldemar Derr are Copyright (C) Waldemar Derr.
+// All Rights Reserved.
+//
+//
+// Acknowledgements
+//
+// - Thanks to Marco Warm for his code suggest to support any unicode chars
+//   <http://www.delphipraxis.net/1063517-post4.html>
+// - Thanks to PeterPanino for his bug fix
+//   <https://www.delphipraxis.net/1188701-post17.html>
+//
+// @author Waldemar Derr <furevest@gmail.com>
 
 unit SendInputHelper;
 
@@ -100,27 +98,21 @@ type
 implementation
 
 const
-  {**
-   * This constant is used as a fake input type for a delay
-   *
-   * @see AddDelay
-   * @see Flush
-   *}
+   // This constant is used as a fake input type for a delay
+   //
+   // @see AddDelay and Flush
   INPUT_DELAY = INPUT_HARDWARE + 1;
-  {**
-   * Missing constant in Windows.pas until D2010
-   *}
+
+  // Missing constant in Windows.pas until D2010
   KEYEVENTF_UNICODE = 4;
 
 function SendInput; external user32 name 'SendInput';
 
-{** TSendInputHelper **}
+{ TSendInputHelper }
 
-{**
- * Add inputs, that are required to produce the passed char
- *
- * @see GetChar
- *}
+// Add inputs, that are required to produce the passed char
+//
+// @see GetChar
 procedure TSendInputHelper.AddChar(SendChar: Char; Press, Release: Boolean);
 var
   Inputs: TInputArray;
@@ -157,14 +149,12 @@ begin
     AddRange(Inputs);
 end;
 
-{**
- * Add a delay for passed milliseconds
- *
- * This is not a part of the SendInput call, but a extension from this class and is exclusively
- * supported by using the Flush method.
- *
- * @see Flush
- *}
+// Add a delay for passed milliseconds
+//
+// This is not a part of the SendInput call, but a extension from this class and is exclusively
+// supported by using the Flush method.
+//
+// @see Flush
 procedure TSendInputHelper.AddDelay(Milliseconds: Cardinal);
 var
   DelayInput: TInput;
@@ -174,21 +164,17 @@ begin
   Add(DelayInput);
 end;
 
-{**
- * Add a single keyboard input
- *
- * @see GetKeyboardInput
- *}
+// Add a single keyboard input
+//
+// @see GetKeyboardInput
 procedure TSendInputHelper.AddKeyboardInput(VirtualKey, ScanCode: Word; Flags, Time: Cardinal);
 begin
   Add(GetKeyboardInput(VirtualKey, ScanCode, Flags, Time));
 end;
 
-{**
- * Add combined "Shift" keys input, this are Ctrl, Alt, Win or the Shift key
- *
- * @see GetShift
- *}
+// Add combined "Shift" keys input, this are Ctrl, Alt, Win or the Shift key
+//
+// @see GetShift
 procedure TSendInputHelper.AddShift(ShiftState: TSIHShiftState; Press, Release: Boolean);
 var
   Inputs: TInputArray;
@@ -204,11 +190,9 @@ begin
   AddShift(ConvertShiftState(ShiftState), Press, Release);
 end;
 
-{**
- * Add required keyboard inputs, to produce a regular keyboard short cut
- *
- * @see GetShortCut
- *}
+// Add required keyboard inputs, to produce a regular keyboard short cut
+//
+// @see GetShortCut
 procedure TSendInputHelper.AddShortCut(ShiftState: TSIHShiftState; ShortVK: Word);
 var
   Inputs: TInputArray;
@@ -237,11 +221,9 @@ begin
   AddShortCut(ConvertShiftState(ShiftState), ShortVK);
 end;
 
-{**
- * Add keyboard strokes, to produce the passed string
- *
- * @see GetText
- *}
+// Add keyboard strokes, to produce the passed string
+//
+// @see GetText
 procedure TSendInputHelper.AddText(SendText: string; AppendReturn: Boolean);
 var
   Inputs: TInputArray;
@@ -251,11 +233,9 @@ begin
     AddRange(Inputs);
 end;
 
-{**
- * Add (optional) a press or release keyboard input for the passed VirtualKey
- *
- * @see GetVirtualKey
- *}
+// Add (optional) a press or release keyboard input for the passed VirtualKey
+//
+// @see GetVirtualKey
 procedure TSendInputHelper.AddVirtualKey(VirtualKey: Word; Press, Release: Boolean);
 var
   Inputs: TInputArray;
@@ -277,14 +257,12 @@ begin
     Include(Result, ssCtrl);
 end;
 
-{**
- * Flushes all added inputs to SendInput
- *
- * This method is blocking for summarized milliseconds, if any delays are previously added
- * through AddDelay.
- *
- * After calling it, the list get cleared.
- *}
+// Flushes all added inputs to SendInput
+//
+// This method is blocking for summarized milliseconds, if any delays are previously added
+// through AddDelay.
+//
+// After calling it, the list get cleared.
 procedure TSendInputHelper.Flush;
 var
   Input: TInput;
@@ -299,9 +277,8 @@ var
 begin
   if Count = 0 then
     Exit;
-  {**
-   * Neutralize the real current keyboard state
-   *}
+
+  // Neutralize the real current keyboard state
   if GetKeyState(VK_CAPITAL) = 1 then
   begin
     InsertRange(0, GetVirtualKey(VK_CAPITAL, True, True));
@@ -352,9 +329,7 @@ begin
   end;
 end;
 
-{**
- * Return a TInputArray with keyboard inputs, that are required to produce the passed char.
- *}
+// Return a TInputArray with keyboard inputs, that are required to produce the passed char.
 class function TSendInputHelper.GetChar(SendChar: Char; Press, Release: Boolean): TInputArray;
 var
   ScanCode: Word;
@@ -393,15 +368,13 @@ begin
   Result := MergeInputs([PreShifts, Chars, AppShifts]);
 end;
 
-{**
- * Return a TInputArray with all previously added inputs
- *
- * This is useful, when you plan to modify or process it further in your custom code.
- *
- * Notice, that the misused input entries, that are added by AddDelay, are included too, but are
- * not suitable for direct flush to SendInput. At best, don't use AddDelay if you use the returned
- * array by this method.
- *}
+// Return a TInputArray with all previously added inputs
+//
+// This is useful, when you plan to modify or process it further in your custom code.
+//
+// Notice, that the misused input entries, that are added by AddDelay, are included too, but are
+// not suitable for direct flush to SendInput. At best, don't use AddDelay if you use the returned
+// array by this method.
 function TSendInputHelper.GetInputArray: TInputArray;
 var
   Input: TInput;
@@ -416,9 +389,7 @@ begin
   end;
 end;
 
-{**
- * Return a single keyboard input entry
- *}
+// Return a single keyboard input entry
 class function TSendInputHelper.GetKeyboardInput(VirtualKey, ScanCode: Word; Flags,
   Time: Cardinal): TInput;
 begin
@@ -429,9 +400,7 @@ begin
   Result.ki.time := Time;
 end;
 
-{**
- * Return combined TInputArray with "shift" keys input, this are Ctrl, Alt, Win or the Shift key
- *}
+// Return combined TInputArray with "shift" keys input, this are Ctrl, Alt, Win or the Shift key
 class function TSendInputHelper.GetShift(ShiftState: TSIHShiftState;
   Press, Release: Boolean): TInputArray;
 var
@@ -460,9 +429,7 @@ begin
   Result := MergeInputs([Ctrls, Alts, Wins, Shifts]);
 end;
 
-{**
- * Return required keyboard inputs in a TInputArray, to produce a regular keyboard short cut
- *}
+// Return required keyboard inputs in a TInputArray, to produce a regular keyboard short cut
 class function TSendInputHelper.GetShortCut(ShiftState: TSIHShiftState; ShortChar: Char): TInputArray;
 var
   PreShifts, Chars, AppShifts: TInputArray;
@@ -580,11 +547,9 @@ begin
     NormalizeDimension(X, RefSize.cx), NormalizeDimension(Y, RefSize.cy), 0, Flags, 0);
 end;
 
-{**
- * Return a TInputArray with keyboard inputs, to produce the passed string
- *
- * @see GetText
- *}
+// Return a TInputArray with keyboard inputs, to produce the passed string
+//
+// @see GetText
 class function TSendInputHelper.GetText(SendText: string; AppendReturn: Boolean): TInputArray;
 var
   cc: Integer;
@@ -596,11 +561,9 @@ begin
     Result := MergeInputs([Result, GetVirtualKey(VK_RETURN, True, True)]);
 end;
 
-{**
- * Return a TInputArray that contains entries for a press or release for the passed VirtualKey
- *
- * @see GetVirtualKey
- *}
+// Return a TInputArray that contains entries for a press or release for the passed VirtualKey
+//
+// @see GetVirtualKey
 class function TSendInputHelper.GetVirtualKey(VirtualKey: Word;
   Press, Release: Boolean): TInputArray;
 begin
@@ -613,19 +576,15 @@ begin
     Result[Ord(Press)] := GetKeyboardInput(VirtualKey, 0, KEYEVENTF_KEYUP, 0);
 end;
 
-{**
- * Determine, whether at the time of call, the passed key is pressed or not
- *}
+// Determine, whether at the time of call, the passed key is pressed or not
 class function TSendInputHelper.IsVirtualKeyPressed(VirtualKey: Word): Boolean;
 begin
   Result := (GetAsyncKeyState(VirtualKey) and $8000 shr 15) = 1;
 end;
 
-{**
- * Merges several TInputArray's into one and return it
- *
- * If all passed TInputArray's are nil or empty, then nil is returned.
- *}
+// Merges several TInputArray's into one and return it
+//
+// If all passed TInputArray's are nil or empty, then nil is returned.
 class function TSendInputHelper.MergeInputs(InputsBatch: array of TInputArray): TInputArray;
 var
   Inputs: TInputArray;

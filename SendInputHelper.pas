@@ -44,7 +44,7 @@ uses
 type
   TInputArray = array of TInput;
 
-  // Local ShiftState type, which is compatible with the same named in the Classes unit.
+  // Local ShiftState type, with the supported subset and the new ssWin entry
   TSIHShiftState = set of (
     ssShift = Ord(System.Classes.ssShift),
     ssAlt = Ord(System.Classes.ssAlt),
@@ -55,6 +55,7 @@ type
   protected
     class function MergeInputs(InputsBatch: array of TInputArray): TInputArray;
   public
+    class function ConvertShiftState(ClassesShiftState: System.Classes.TShiftState): TSIHShiftState;
     class function GetKeyboardInput(VirtualKey, ScanCode: Word; Flags, Time: Cardinal): TInput;
     class function GetVirtualKey(VirtualKey: Word; Press, Release: Boolean): TInputArray;
     class function GetShift(ShiftState: TSIHShiftState; Press, Release: Boolean): TInputArray;
@@ -73,11 +74,15 @@ type
 
     procedure AddKeyboardInput(VirtualKey, ScanCode: Word; Flags, Time: Cardinal);
     procedure AddVirtualKey(VirtualKey: Word; Press: Boolean = True; Release: Boolean = True);
-    procedure AddShift(ShiftState: TSIHShiftState; Press, Release: Boolean);
-    procedure AddChar(SendChar: Char; Press: Boolean = True; Release: Boolean = True);
-    procedure AddText(SendText: string; AppendReturn: Boolean = False);
+
+    procedure AddShift(ShiftState: TSIHShiftState; Press, Release: Boolean); overload;
+    procedure AddShift(ShiftState: System.Classes.TShiftState; Press, Release: Boolean); overload;
     procedure AddShortCut(ShiftState: TSIHShiftState; ShortChar: Char); overload;
     procedure AddShortCut(ShiftState: TSIHShiftState; ShortVK: Word); overload;
+    procedure AddShortCut(ShiftState: System.Classes.TShiftState; ShortChar: Char); overload;
+    procedure AddShortCut(ShiftState: System.Classes.TShiftState; ShortVK: Word); overload;
+    procedure AddChar(SendChar: Char; Press: Boolean = True; Release: Boolean = True);
+    procedure AddText(SendText: string; AppendReturn: Boolean = False);
 
     procedure AddMouseClick(MouseButton: TMouseButton; Press: Boolean = True; Release: Boolean = True);
     procedure AddRelativeMouseMove(DeltaX, DeltaY: Integer);
@@ -193,6 +198,12 @@ begin
     AddRange(Inputs);
 end;
 
+procedure TSendInputHelper.AddShift(ShiftState: System.Classes.TShiftState;
+  Press, Release: Boolean);
+begin
+  AddShift(ConvertShiftState(ShiftState), Press, Release);
+end;
+
 {**
  * Add required keyboard inputs, to produce a regular keyboard short cut
  *
@@ -214,6 +225,16 @@ begin
   Inputs := GetShortCut(ShiftState, ShortChar);
   if Assigned(Inputs) then
     AddRange(Inputs);
+end;
+
+procedure TSendInputHelper.AddShortCut(ShiftState: System.Classes.TShiftState; ShortChar: Char);
+begin
+  AddShortCut(ConvertShiftState(ShiftState), ShortChar);
+end;
+
+procedure TSendInputHelper.AddShortCut(ShiftState: System.Classes.TShiftState; ShortVK: Word);
+begin
+  AddShortCut(ConvertShiftState(ShiftState), ShortVK);
 end;
 
 {**
@@ -242,6 +263,18 @@ begin
   Inputs := GetVirtualKey(VirtualKey, Press, Release);
   if Assigned(Inputs) then
     AddRange(Inputs);
+end;
+
+class function TSendInputHelper.ConvertShiftState(
+  ClassesShiftState: System.Classes.TShiftState): TSIHShiftState;
+begin
+  Result := [];
+  if System.Classes.ssShift in ClassesShiftState then
+    Include(Result, ssShift);
+  if System.Classes.ssAlt in ClassesShiftState then
+    Include(Result, ssAlt);
+  if System.Classes.ssCtrl in ClassesShiftState then
+    Include(Result, ssCtrl);
 end;
 
 {**

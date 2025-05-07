@@ -1,4 +1,4 @@
-// License
+﻿// License
 //
 // The contents of this file are subject to the Mozilla Public License
 // Version 1.1 (the "License"); you may not use this file except in
@@ -267,11 +267,12 @@ procedure TSendInputHelper.Flush;
 var
   Input: TInput;
   Inputs: TInputArray;
-  InputsCount: Integer;
+  InputsCount: Cardinal;
 
   procedure LocalSendInput;
   begin
-    SendInput(InputsCount, Inputs, SizeOf(TInput));
+    if InputsCount > 0 then
+      SendInput(InputsCount, Inputs, SizeOf(TInput));
   end;
 
 begin
